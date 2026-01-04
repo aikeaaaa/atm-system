@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<title>ATM自助服务终端</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+<style>
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    /* ===== 原子按钮样式 ===== */
+    .atm-primary-btn {
+      background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+      color: white;
+      padding: 24px 32px;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+    
+    .atm-primary-btn:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
+    }
+    
+    .atm-secondary-btn {
+      background: white;
+      color: #3B82F6;
+      padding: 16px 24px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      border: 2px solid #3B82F6;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+    }
+    
+    .atm-secondary-btn:hover {
+      background: #F0F6FF;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+    }
+    
+    .atm-back-btn {
+      background: white;
+      color: #666666;
+      padding: 12px 32px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      border: 2px solid #D1D5DB;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+    }
+    
+    .atm-back-btn:hover {
+      background: #F9FAFB;
+      border-color: #999999;
+    }
+    
+    .atm-numpad-btn {
+      background: white;
+      color: #333333;
+      padding: 20px;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: 600;
+      border: 2px solid #E5E7EB;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+    }
+    
+    .atm-numpad-btn:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      transform: translateY(-1px);
+    }
+    
+    .atm-input {
+      background: white;
+      padding: 14px 16px;
+      border-radius: 8px;
+      border: 2px solid #E5E7EB;
+      font-size: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      transition: all 0.3s ease;
+    }
+    
+    .atm-input:focus {
+      outline: none;
+      border-color: #3B82F6;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.12);
+    }
+    
+    .atm-dialog-cancel-btn {
+      background: white;
+      color: #666666;
+      padding: 10px 32px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      border: 2px solid #D1D5DB;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+    }
+    
+    .atm-dialog-cancel-btn:hover {
+      background: #F9FAFB;
+    }
+    
+    .atm-dialog-confirm-btn {
+      background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+      color: white;
+      padding: 10px 32px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+    
+    .atm-dialog-confirm-btn:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* ===== 三层分区结构 ===== */
+    .atm-page-header {
+      background: linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 100%);
+      padding: 20px;
+      border-bottom: 2px solid #0EA5E9;
+      margin-bottom: 0;
+    }
+    
+    .atm-page-content {
+      background: white;
+      padding: 30px;
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+    
+    .atm-page-footer {
+      background: #F3F4F6;
+      padding: 20px;
+      border-top: 1px solid #E5E7EB;
+      margin-top: auto;
+    }
+    
+    .atm-page-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+    }
+    
+    /* 交易状态样式 */
+    .status-success {
+      color: #10B981;
+      background-color: #D1FAE5;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    
+    .status-failed {
+      color: #EF4444;
+      background-color: #FEE2E2;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    
+    .status-pending {
+      color: #F59E0B;
+      background-color: #FEF3C7;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<!-- 主屏幕容器 -->
+<div class="w-[1024px] h-[768px] bg-white border-4 border-gray-300 relative overflow-hidden" id="atm-screen">
+<!-- 日期时间显示 -->
+<div class="absolute top-4 right-4 text-gray-700 flex items-center">
+<iconify-icon class="text-xl mr-2" icon="mdi:calendar"></iconify-icon>
+<span id="current-date">2025-11-29</span>
+<span class="mx-2">|</span>
+<iconify-icon class="text-xl mr-2" icon="mdi:clock-outline"></iconify-icon>
+<span id="current-time">10:30:05</span>
+</div>
+<!-- 操作倒计时 -->
+<div class="absolute top-4 left-4 bg-red-500 px-3 py-1 rounded-lg flex items-center">
+<iconify-icon class="text-white text-xl mr-2" icon="mdi:timer-sand"></iconify-icon>
+<span class="text-white font-bold text-xl" id="timeout-timer">60</span>
+</div>
+<!-- 页面容器 -->
+<div class="w-full h-full overflow-y-auto hide-scrollbar" id="page-container">
+<!-- 登录页面 -->
+<div class="pt-24 pb-20 px-10 min-h-full flex flex-col items-center justify-center" id="login-page">
+<!-- 银行Logo -->
+<div class="flex justify-center mb-12">
+<div class="bg-white w-32 h-32 rounded-full flex items-center justify-center shadow-xl">
+<iconify-icon class="text-blue-800 text-6xl" icon="mdi:bank"></iconify-icon>
+</div>
+</div>
+<!-- 标题 -->
+<h1 class="text-gray-800 text-4xl font-bold text-center mb-12">银行自助服务终端</h1>
+<!-- 登录表单 -->
+<div class="w-full max-w-md bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-8 border-2 border-gray-400 shadow-lg mb-8">
+<div class="mb-6">
+<label class="text-gray-800 mb-2 block font-semibold">银行卡号</label>
+<input class="atm-input w-full" placeholder="请输入银行卡号" type="text" id="card-number"/>
+</div>
+<div class="mb-6">
+<label class="text-gray-800 mb-2 block font-semibold">密码</label>
+<input class="atm-input w-full" placeholder="请输入密码" type="password" id="password"/>
+</div>
+<div class="flex justify-center">
+<button class="atm-primary-btn px-12 py-4" id="login-btn">
+<iconify-icon class="text-3xl mr-2" icon="mdi:login"></iconify-icon>
+              登录
+            </button>
+</div>
+</div>
+<!-- 提示信息 -->
+<div class="text-center text-gray-600 text-sm">
+<p>温馨提示：请确保周围环境安全，防止密码泄露</p>
+<p class="mt-1">客服热线：95588</p>
+</div>
+</div>
+<!-- 首页 -->
+<div class="hidden pt-24 pb-20 px-10 min-h-full" id="home-page">
+<!-- 银行Logo -->
+<div class="flex justify-center mb-16">
+<div class="bg-white w-32 h-32 rounded-full flex items-center justify-center shadow-xl">
+<iconify-icon class="text-blue-800 text-6xl" icon="mdi:bank"></iconify-icon>
+</div>
+</div>
+<!-- 标题 -->
+<h1 class="text-gray-800 text-4xl font-bold text-center mb-12">银行自助服务终端</h1>
+<!-- 功能按钮网格 -->
+<div class="grid grid-cols-2 gap-8">
+<button class="atm-primary-btn" data-next="withdraw-step1" style="animation: fadeIn 0.5s ease-in;">
+<iconify-icon class="text-4xl mb-3" icon="mdi:cash-minus"></iconify-icon>
+            取款
+          </button>
+<button class="atm-primary-btn" data-next="deposit-step1" style="animation: fadeIn 0.5s ease-in 0.1s both;">
+<iconify-icon class="text-4xl mb-3" icon="mdi:cash-plus"></iconify-icon>
+            存款
+          </button>
+<button class="atm-primary-btn" data-next="transfer-step1" style="animation: fadeIn 0.5s ease-in 0.2s both;">
+<iconify-icon class="text-4xl mb-3" icon="mdi:bank-transfer"></iconify-icon>
+            转账
+          </button>
+<button class="atm-primary-btn" data-next="query-page" style="animation: fadeIn 0.5s ease-in 0.3s both;">
+<iconify-icon class="text-4xl mb-3" icon="mdi:file-document"></iconify-icon>
+            查询
+          </button>
+</div>
+<!-- 底部信息 -->
+<div class="absolute bottom-6 w-full text-center text-gray-600 text-sm">
+<p>客服热线：95588 | 安全提示：请保管好您的密码</p>
+<p class="mt-1">© 2025 银行版权所有</p>
+</div>
+</div>
+<!-- ========= 取款流程 ========= -->
+<!-- 取款步骤1: 金额选择 -->
+<div class="hidden atm-page-container min-h-full" id="withdraw-step1">
+<div class="atm-page-header">
+<h2 class="text-gray-800 text-3xl font-bold text-center">选择取款金额</h2>
+</div>
+<div class="atm-page-content">
+<p class="text-gray-600 text-center mb-10 text-sm">当前余额: ¥8,650.00</p>
+<div class="grid grid-cols-3 gap-8 mb-12">
+<button class="atm-secondary-btn withdraw-amount-btn" data-amount="100">100元</button>
+<button class="atm-secondary-btn withdraw-amount-btn" data-amount="300">300元</button>
+<button class="atm-secondary-btn withdraw-amount-btn" data-amount="500">500元</button>
+<button class="atm-secondary-btn withdraw-amount-btn" data-amount="1000">1000元</button>
+<button class="atm-secondary-btn withdraw-amount-btn" data-amount="2000">2000元</button>
+<button class="atm-secondary-btn" data-next="withdraw-step2">其他金额</button>
+</div>
+</div>
+<div class="atm-page-footer flex justify-center">
+<button class="atm-back-btn" data-back="home">返回</button>
+</div>
+</div>
+<!-- 取款步骤2: 金额输入 -->
+<div class="hidden atm-page-container min-h-full" id="withdraw-step2">
+<div class="atm-page-header">
+<h2 class="text-gray-800 text-3xl font-bold text-center">输入取款金额</h2>
+</div>
+<div class="atm-page-content">
+<div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-6 mb-8 max-w-md mx-auto border-2 border-gray-400 shadow-md">
+<p class="text-gray-600 text-center mb-3 text-sm">取款金额</p>
+<p class="text-5xl font-bold text-center text-blue-700">¥<span id="withdraw-custom-amount">0</span></p>
+</div>
+<div class="grid grid-cols-3 gap-4 max-w-md mx-auto mb-8">
+<button class="atm-numpad-btn withdraw-numpad-btn">1</button>
+<button class="atm-numpad-btn withdraw-numpad-btn">2</button>
+<button class="atm-numpad-btn withdraw-numpad-btn">3</button>
+<button class="atm-numpad-btn withdraw-numpad-btn">4</button>
+<button class="atm-numpad-btn withdraw-numpad-btn">5</button>
+<button class="atm-numpad-btn withdraw-numpad-btn">6</button>
+<button class="atm-numpad-btn withdraw-numpad-btn">7</button>
+<button class="atm-numpad-btn withdraw-numpad-btn">8</button>
+<button class="atm-numpad-btn withdraw-numpad-btn">9</button>
+<button class="atm-numpad-btn withdraw-clear-btn">清除</button>
+<button class="atm-numpad-btn withdraw-numpad-btn">0</button>
+<button class="atm-numpad-btn withdraw-custom-confirm-btn bg-blue-500 text-white">确认</button>
+</div>
+<p class="text-gray-600 text-center text-sm">
+            取款金额必须为100的整数倍
+          </p>
+</div>
+<div class="atm-page-footer flex justify-center">
+<button class="atm-back-btn" data-back="withdraw-step1">返回</button>
+</div>
+</div>
+<!-- 取款步骤3: 密码输入 -->
+<div class="hidden atm-page-container min-h-full" id="withdraw-step3">
+<div class="atm-page-header">
+<h2 class="text-gray-800 text-3xl font-bold text-center">请输入密码</h2>
+</div>
+<div class="atm-page-content">
+<div class="flex justify-center mb-12">
+<div class="flex space-x-4">
+<div class="w-6 h-6 bg-blue-500 rounded-full password-dot"></div>
+<div class="w-6 h-6 bg-blue-500 rounded-full password-dot"></div>
+<div class="w-6 h-6 bg-gray-300 rounded-full password-dot"></div>
+<div class="w-6 h-6 bg-gray-300 rounded-full password-dot"></div>
+<div class="w-6 h-6 bg-gray-300 rounded-full password-dot"></div>
+<div class="w-6 h-6 bg-gray-300 rounded-full password-dot"></div>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-4 max-w-md mx-auto mb-8">
+<button class="atm-numpad-btn withdraw-password-btn">1</button>
+<button class="atm-numpad-btn withdraw-password-btn">2</button>
+<button class="atm-numpad-btn withdraw-password-btn">3</button>
+<button class="atm-numpad-btn withdraw-password-btn">4</button>
+<button class="atm-numpad-btn withdraw-password-btn">5</button>
+<button class="atm-numpad-btn withdraw-password-btn">6</button>
+<button class="atm-numpad-btn withdraw-password-btn">7</button>
+<button class="atm-numpad-btn withdraw-password-btn">8</button>
+<button class="atm-numpad-btn withdraw-password-btn">9</button>
+<button class="atm-numpad-btn withdraw-password-clear">清除</button>
+<button class="atm-numpad-btn withdraw-password-btn">0</button>
+<button class="atm-numpad-btn withdraw-password-confirm bg-blue-500 text-white">确认</button>
+</div>
+<p class="text-gray-600 text-center text-sm">
+            安全提示：密码输入错误超过3次账户将被锁定
+          </p>
+</div>
+<div class="atm-page-footer flex justify-center">
+<button class="atm-back-btn" data-back="withdraw-step2">返回</button>
+</div>
+</div>
+<!-- ========= 存款流程 ========= -->
+<!-- 存款步骤1: 约束提示 -->
+<div class="hidden atm-page-container min-h-full" id="deposit-step1">
+<div class="atm-page-header">
+<h2 class="text-gray-800 text-3xl font-bold text-center">存款服务</h2>
+</div>
+<div class="atm-page-content">
+<div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-6 mb-8 max-w-md mx-auto border-2 border-gray-400 shadow-md">
+<p class="text-gray-600 text-center mb-3 text-sm">存款金额</p>
+<p class="text-5xl font-bold text-center text-blue-700">¥<span id="deposit-amount">0</span></p>
+</div>
+<div class="grid grid-cols-3 gap-4 max-w-md mx-auto mb-8">
+<button class="atm-numpad-btn deposit-numpad-btn">1</button>
+<button class="atm-numpad-btn deposit-numpad-btn">2</button>
+<button class="atm-numpad-btn deposit-numpad-btn">3</button>
+<button class="atm-numpad-btn deposit-numpad-btn">4</button>
+<button class="atm-numpad-btn deposit-numpad-btn">5</button>
+<button class="atm-numpad-btn deposit-numpad-btn">6</button>
+<button class="atm-numpad-btn deposit-numpad-btn">7</button>
+<button class="atm-numpad-btn deposit-numpad-btn">8</button>
+<button class="atm-numpad-btn deposit-numpad-btn">9</button>
+<button class="atm-numpad-btn deposit-clear-btn">清除</button>
+<button class="atm-numpad-btn deposit-numpad-btn">0</button>
+<button class="atm-numpad-btn deposit-confirm-btn bg-green-500 text-white">确认</button>
+</div>
+<p class="text-gray-600 text-center text-sm">
+            今日已存金额: ¥0.00 / ¥20,000 | 存款金额必须为100的整数倍
+          </p>
+</div>
+<div class="atm-page-footer flex justify-center space-x-8">
+<button class="atm-primary-btn" id="deposit-proceed-btn">继续存款</button>
+<button class="atm-back-btn" data-back="home">返回</button>
+</div>
+</div>
+<!-- ========= 转账流程 ========= -->
+<!-- 转账步骤1: 账号输入 -->
+<div class="hidden atm-page-container min-h-full" id="transfer-step1">
+<div class="atm-page-header">
+<h2 class="text-gray-800 text-3xl font-bold text-center">转账汇款</h2>
+</div>
+<div class="atm-page-content">
+<div class="max-w-lg mx-auto bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border-2 border-gray-400 shadow-lg">
+<div class="mb-6">
+<label class="text-gray-800 mb-2 block font-semibold">收款人姓名</label>
+<input class="atm-input w-full" placeholder="请输入收款人姓名" type="text" id="recipient-name"/>
+</div>
+<div class="mb-6">
+<label class="text-gray-800 mb-2 block font-semibold">收款账号</label>
+<input class="atm-input w-full" placeholder="请输入银行账号" type="text" id="recipient-account"/>
+</div>
+<div class="mb-6">
+<label class="text-gray-800 mb-2 block font-semibold">转账金额</label>
+<input class="atm-input w-full" placeholder="请输入转账金额" type="text" id="transfer-amount"/>
+</div>
+<div class="mb-6">
+<label class="text-gray-800 mb-2 block font-semibold">开户银行</label>
+<select class="atm-input w-full" id="bank-select">
+<option value="">请选择开户银行</option>
+<option value="icbc">中国工商银行</option>
+<option value="ccb">中国建设银行</option>
+<option value="abc">中国农业银行</option>
+<option value="boc">中国银行</option>
+<option value="cmb">招商银行</option>
+</select>
+</div>
+</div>
+</div>
+<div class="atm-page-footer flex justify-center space-x-8">
+<button class="atm-primary-btn" id="transfer-next-btn">下一步</button>
+<button class="atm-back-btn" data-back="home">返回</button>
+</div>
+</div>
+<!-- 转账步骤2: 确认信息 -->
+<div class="hidden atm-page-container min-h-full" id="transfer-step2">
+<div class="atm-page-header">
+<h2 class="text-gray-800 text-3xl font-bold text-center">确认转账信息</h2>
+</div>
+<div class="atm-page-content">
+<div class="max-w-lg mx-auto bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border-2 border-gray-400 shadow-lg">
+<div class="space-y-4">
+<div class="flex justify-between">
+<span class="text-gray-600">收款人:</span>
+<span class="font-semibold" id="confirm-recipient-name"></span>
+</div>
+<div class="flex justify-between">
+<span class="text-gray-600">收款账号:</span>
+<span class="font-semibold" id="confirm-recipient-account"></span>
+</div>
+<div class="flex justify-between">
+<span class="text-gray-600">开户银行:</span>
+<span class="font-semibold" id="confirm-bank-name"></span>
+</div>
+<div class="flex justify-between">
+<span class="text-gray-600">转账金额:</span>
+<span class="font-semibold text-red-600" id="confirm-transfer-amount"></span>
+</div>
+<div class="flex justify-between border-t pt-4">
+<span class="text-gray-600">手续费:</span>
+<span class="font-semibold">¥2.00</span>
+</div>
+<div class="flex justify-between">
+<span class="text-gray-600">总计:</span>
+<span class="font-semibold text-blue-600" id="confirm-total-amount"></span>
+</div>
+</div>
+</div>
+</div>
+<div class="atm-page-footer flex justify-center space-x-8">
+<button class="atm-primary-btn" id="transfer-confirm-btn">确认转账</button>
+<button class="atm-back-btn" data-back="transfer-step1">返回</button>
+</div>
+</div>
+<!-- ========= 查询页面 ========= -->
+<!-- 交易记录查询 -->
+<div class="hidden atm-page-container min-h-full" id="query-page">
+<div class="atm-page-header">
+<h2 class="text-gray-800 text-3xl font-bold text-center">交易查询</h2>
+</div>
+<div class="atm-page-content">
+<div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 mb-8 border-2 border-gray-400 shadow-md">
+<div class="grid grid-cols-4 gap-4 mb-6">
+<div>
+<label class="text-gray-800 mb-2 block font-semibold text-sm">时间范围</label>
+<select class="atm-input w-full text-sm" id="time-range">
+<option value="7">近7天</option>
+<option value="30">近30天</option>
+<option value="90">近90天</option>
+<option value="all">全部</option>
+</select>
+</div>
+<div>
+<label class="text-gray-800 mb-2 block font-semibold text-sm">交易类型</label>
+<select class="atm-input w-full text-sm" id="transaction-type">
+<option value="all">全部</option>
+<option value="withdraw">取款</option>
+<option value="deposit">存款</option>
+<option value="transfer">转账</option>
+</select>
+</div>
+<div>
+<label class="text-gray-800 mb-2 block font-semibold text-sm">交易状态</label>
+<select class="atm-input w-full text-sm" id="transaction-status">
+<option value="all">全部</option>
+<option value="success">成功</option>
+<option value="failed">失败</option>
+<option value="pending">处理中</option>
+</select>
+</div>
+<div>
+<button class="w-full bg-gradient-to-br from-blue-500 to-blue-700 text-white py-3 rounded-lg hover:from-blue-600 hover:to-blue-800 transition shadow-md hover:shadow-lg mt-6" id="query-btn">
+                  查询
+                </button>
+</div>
+</div>
+</div>
+<div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden border-2 border-gray-400 shadow-lg">
+<div class="grid grid-cols-6 bg-gray-200 text-gray-800 py-3 px-4 font-semibold text-sm">
+<div>时间</div>
+<div>类型</div>
+<div>金额</div>
+<div>余额</div>
+<div>状态</div>
+<div>地点/备注</div>
+</div>
+<div class="divide-y divide-gray-300 max-h-[300px] overflow-y-auto" id="transaction-list">
+<div class="grid grid-cols-6 py-3 px-4 text-gray-700 text-sm">
+<div>2025-11-28 14:30</div>
+<div>取款</div>
+<div class="text-red-600">¥500.00</div>
+<div>¥8,650.00</div>
+<div class="status-success">成功</div>
+<div>ATM终端-001</div>
+</div>
+<div class="grid grid-cols-6 py-3 px-4 text-gray-700 text-sm">
+<div>2025-11-27 09:15</div>
+<div>存款</div>
+<div class="text-green-600">¥1,200.00</div>
+<div>¥9,150.00</div>
+<div class="status-success">成功</div>
+<div>ATM终端-001</div>
+</div>
+<div class="grid grid-cols-6 py-3 px-4 text-gray-700 text-sm">
+<div>2025-11-25 16:45</div>
+<div>转账</div>
+<div class="text-red-600">¥800.00</div>
+<div>¥7,950.00</div>
+<div class="status-failed">失败</div>
+<div>对方账号异常</div>
+</div>
+<div class="grid grid-cols-6 py-3 px-4 text-gray-700 text-sm">
+<div>2025-11-24 11:20</div>
+<div>转账</div>
+<div class="text-red-600">¥1,000.00</div>
+<div>¥8,750.00</div>
+<div class="status-pending">处理中</div>
+<div>跨行转账中</div>
+</div>
+<div class="grid grid-cols-6 py-3 px-4 text-gray-700 text-sm">
+<div>2025-11-23 10:05</div>
+<div>取款</div>
+<div class="text-red-600">¥200.00</div>
+<div>¥9,750.00</div>
+<div class="status-success">成功</div>
+<div>ATM终端-002</div>
+</div>
+<div class="grid grid-cols-6 py-3 px-4 text-gray-700 text-sm">
+<div>2025-11-22 15:30</div>
+<div>存款</div>
+<div class="text-green-600">¥500.00</div>
+<div>¥9,950.00</div>
+<div class="status-success">成功</div>
+<div>ATM终端-001</div>
+</div>
+<div class="grid grid-cols-6 py-3 px-4 text-gray-700 text-sm">
+<div>2025-11-20 09:45</div>
+<div>转账</div>
+<div class="text-red-600">¥300.00</div>
+<div>¥9,450.00</div>
+<div class="status-success">成功</div>
+<div>跨行转账</div>
+</div>
+</div>
+</div>
+</div>
+<div class="atm-page-footer flex justify-center">
+<button class="atm-back-btn" data-back="home">返回</button>
+</div>
+</div>
+</div>
+<!-- ========= 全局弹窗系统 ========= -->
+<div class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50" id="atm-dialog">
+<div class="bg-white w-[600px] h-[400px] border-2 border-blue-500 rounded-xl shadow-xl relative flex flex-col">
+<!-- 弹窗内容会通过JS动态插入 -->
+<button class="absolute top-4 right-4 text-gray-400 hover:text-gray-600" id="close-dialog">
+<iconify-icon class="text-2xl" icon="mdi:close"></iconify-icon>
+</button>
+</div>
+</div>
+<!-- 出钞引导动画 -->
+<div class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" id="cash-animation">
+<div class="text-center">
+<div class="bg-gray-800 rounded-xl w-64 h-96 relative overflow-hidden mb-8">
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="cash-note animate-bounce delay-300 absolute bottom-0">
+<div class="bg-yellow-400 w-32 h-16 rounded flex items-center justify-center text-lg font-bold shadow-md">
+               ¥100
+              </div>
+</div>
+</div>
+</div>
+<h2 class="text-white text-3xl font-bold mb-4">请取走您的现金</h2>
+<div class="text-white bg-red-500 px-4 py-2 rounded-full inline-flex items-center">
+<iconify-icon class="mr-2" icon="mdi:timer"></iconify-icon>
+<span id="cash-timer">30</span>秒后自动回收
+        </div>
+</div>
+</div>
+</div>
+<script>
+    // 全局状态
+    let currentPage = 'login-page';
+    let timeoutCounter = 60;
+    let timeoutInterval = null;
+    let isLoggedIn = false;
+    
+    // 取款相关状态 - 分开的计数器
+    let withdrawInputAmount = '';
+    let withdrawPassword = '';
+    let withdrawAmount = 0;
+    let withdrawAttemptCount = 0; // 取款尝试计数器
+    let depositAttemptCount = 0; // 存款尝试计数器
+    
+    // 存款相关状态
+    let depositInputAmount = '';
+    
+    // 转账相关状态
+    let transferData = {
+      recipientName: '',
+      recipientAccount: '',
+      transferAmount: '',
+      bankName: ''
+    };
+    
+    // 当前日期和时间
+    function updateDateTime() {
+      document.getElementById('current-date').textContent = '2025-11-29';
+      const now = new Date();
+      const timeStr = now.toTimeString().substr(0, 8);
+      document.getElementById('current-time').textContent = timeStr;
+    }
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+    
+    // 操作超时倒计时
+    function startTimeoutTimer() {
+      clearInterval(timeoutInterval);
+      timeoutCounter = 60;
+      document.getElementById('timeout-timer').textContent = timeoutCounter;
+      
+      timeoutInterval = setInterval(() => {
+        timeoutCounter--;
+        document.getElementById('timeout-timer').textContent = timeoutCounter;
+        
+        if (timeoutCounter <= 0) {
+          clearInterval(timeoutInterval);
+          showTimeoutDialog();
+        }
+      }, 1000);
+    }
+    
+    // 超时弹窗函数 - 重要修改
+    function showTimeoutDialog() {
+      let message = '';
+      let targetPage = '';
+      
+      if (currentPage === 'home-page') {
+        // 首页超时
+        message = '操作超时，银行卡已经退出，请重新进行登录';
+        targetPage = 'login-page';
+      } else if (currentPage.startsWith('withdraw-')) {
+        // 取款页面超时
+        message = '操作超时，将返回主界面';
+        targetPage = 'home-page';
+      } else if (currentPage.startsWith('deposit-')) {
+        // 存款页面超时
+        message = '操作超时，将返回主界面';
+        targetPage = 'home-page';
+      } else if (currentPage.startsWith('transfer-')) {
+        // 转账页面超时
+        message = '操作超时，将返回主界面';
+        targetPage = 'home-page';
+      } else if (currentPage === 'query-page') {
+        // 查询页面超时
+        message = '操作超时，将返回主界面';
+        targetPage = 'home-page';
+      } else {
+        // 默认
+        message = '操作超时，将返回登录界面';
+        targetPage = 'login-page';
+      }
+      
+      // 直接显示弹窗，点击确定后跳转
+      showDialogWithRedirect('操作超时', message, targetPage);
+    }
+    
+    // 新增：带跳转的弹窗函数
+    function showDialogWithRedirect(title, message, targetPage) {
+      const dialog = document.getElementById('atm-dialog');
+      const dialogContent = dialog.querySelector('.bg-white');
+      
+      dialogContent.innerHTML = `
+        <button class="absolute top-4 right-4 text-gray-400 hover:text-gray-600" onclick="closeDialog(); handleTimeoutRedirect('${targetPage}')">
+          <iconify-icon class="text-2xl" icon="mdi:close"></iconify-icon>
+        </button>
+        <div class="p-8 flex-grow overflow-y-auto flex flex-col items-center justify-center">
+          <div class="text-center mb-8">
+            <iconify-icon class="text-red-500 text-6xl mb-4" icon="mdi:alert-circle"></iconify-icon>
+            <h3 class="text-2xl font-bold text-center mb-4">${title}</h3>
+            <div class="text-lg text-gray-700">${message}</div>
+          </div>
+        </div>
+        <div class="border-t border-gray-200 p-4 flex justify-center">
+          <button class="atm-dialog-confirm-btn" onclick="handleTimeoutRedirect('${targetPage}')">确定</button>
+        </div>
+      `;
+      
+      dialog.classList.remove('hidden');
+      clearInterval(timeoutInterval);
+    }
+    
+    // 超时后跳转处理
+    function handleTimeoutRedirect(targetPage) {
+      closeDialog();
+      
+      // 如果跳转到登录页，需要重置登录状态
+      if (targetPage === 'login-page') {
+        isLoggedIn = false;
+        // 清空登录表单
+        document.getElementById('card-number').value = '';
+        document.getElementById('password').value = '';
+      }
+      
+      // 显示目标页面
+      showPage(targetPage);
+    }
+    
+    function resetTimeoutTimer() {
+      clearInterval(timeoutInterval);
+      timeoutCounter = 60;
+      document.getElementById('timeout-timer').textContent = timeoutCounter;
+      if (isLoggedIn) {
+        startTimeoutTimer();
+      }
+    }
+    
+    // 页面切换
+    function showPage(pageId) {
+      document.querySelectorAll('#page-container > div').forEach(page => {
+        page.classList.add('hidden');
+      });
+      document.getElementById(pageId).classList.remove('hidden');
+      currentPage = pageId;
+      
+      // 进入功能页面时显示约束提示
+      if (pageId === 'withdraw-step1') {
+        setTimeout(() => {
+          showWithdrawConstraints();
+        }, 300);
+      } else if (pageId === 'deposit-step1') {
+        setTimeout(() => {
+          showDepositConstraints();
+        }, 300);
+      } else if (pageId === 'transfer-step1') {
+        setTimeout(() => {
+          showTransferConstraints();
+        }, 300);
+      }
+      
+      // 重置倒计时
+      if (isLoggedIn) {
+        resetTimeoutTimer();
+      }
+    }
+    
+    // 显示取款约束
+    function showWithdrawConstraints() {
+      showDialog(
+        '取款约束提示',
+        `
+          <div class="text-left text-gray-700 space-y-3">
+            <div class="font-semibold text-lg">1. 大额现金取款需登记</div>
+            <div class="ml-4">
+              <p>• 个人单日单笔或累计现金取款≥5万元，需提供本人有效身份证件。</p>
+              <p>• 单位办理大额现金存款，需出具营业执照、经办人身份证件等材料。</p>
+            </div>
+            <div class="font-semibold text-lg">2. 账户状态限制</div>
+            <div class="ml-4">
+              <p>• 账户处于挂失、冻结、销户状态时，无法办理存款业务。</p>
+              <p>• 睡眠账户需先激活，才能正常存入资金。</p>
+            </div>
+            <div class="font-semibold text-lg text-red-600 mt-4">
+              注意：取款金额必须为100的倍数，单日累计限额为20,000元
+            </div>
+          </div>
+        `,
+        `
+          <button class="atm-dialog-confirm-btn" onclick="closeDialog()">我知道了</button>
+        `
+      );
+    }
+    
+    // 显示存款约束
+    function showDepositConstraints() {
+      showDialog(
+        '存款约束提示',
+        `
+          <div class="text-left text-gray-700 space-y-3">
+            <div class="font-semibold text-lg">存款额度限制</div>
+            <div class="ml-4">
+              <p>• 单次最高存款金额：¥5,000</p>
+              <p>• 每日累计最高存款金额：¥20,000</p>
+            </div>
+            <div class="font-semibold text-lg">纸币要求</div>
+            <div class="ml-4">
+              <p>• 仅接受完整无损的人民币纸币</p>
+              <p>• 不接受破损、涂写、粘贴的纸币</p>
+            </div>
+            <div class="font-semibold text-lg">其他限制</div>
+            <div class="ml-4">
+              <p>• 支票/硬币需前往柜台办理</p>
+              <p>• 账户必须处于正常状态</p>
+            </div>
+            <div class="font-semibold text-lg text-red-600 mt-4">
+              注意：存款金额必须为100的整数倍
+            </div>
+          </div>
+        `,
+        `
+          <button class="atm-dialog-confirm-btn" onclick="closeDialog()">我知道了</button>
+        `
+      );
+    }
+    
+    // 显示转账约束
+    function showTransferConstraints() {
+      showDialog(
+        '转账约束提示',
+        `
+          <div class="text-left text-gray-700 space-y-3">
+            <div class="font-semibold text-lg">1. 转账额度限制</div>
+            <div class="ml-4">
+              <p>• 单笔转账最高限额：¥50,000</p>
+              <p>• 单日累计转账限额：¥100,000</p>
+            </div>
+            <div class="font-semibold text-lg">2. 转账时间限制</div>
+            <div class="ml-4">
+              <p>• 工作日：9:00-17:00实时到账</p>
+              <p>• 非工作时间：下一工作日到账</p>
+            </div>
+            <div class="font-semibold text-lg">3. 手续费说明</div>
+            <div class="ml-4">
+              <p>• 本行转账：免费</p>
+              <p>• 跨行转账：每笔¥2.00手续费</p>
+            </div>
+            <div class="font-semibold text-lg">4. 账户要求</div>
+            <div class="ml-4">
+              <p>• 账户必须为正常状态</p>
+              <p>• 账户余额需足够支付转账金额和手续费</p>
+            </div>
+          </div>
+        `,
+        `
+          <button class="atm-dialog-confirm-btn" onclick="closeDialog()">我知道了</button>
+        `
+      );
+    }
+    
+    // 弹窗控制
+    function showDialog(title, content, buttons) {
+      const dialog = document.getElementById('atm-dialog');
+      const dialogContent = dialog.querySelector('.bg-white');
+      
+      dialogContent.innerHTML = `
+        <button class="absolute top-4 right-4 text-gray-400 hover:text-gray-600" onclick="closeDialog()">
+          <iconify-icon class="text-2xl" icon="mdi:close"></iconify-icon>
+        </button>
+        <div class="p-8 flex-grow overflow-y-auto">
+          <h3 class="text-2xl font-bold text-center mb-6">${title}</h3>
+          <div class="text-lg text-gray-700">${content}</div>
+        </div>
+        <div class="border-t border-gray-200 p-4 flex justify-center space-x-4">
+          ${buttons}
+        </div>
+      `;
+      
+      dialog.classList.remove('hidden');
+      clearInterval(timeoutInterval);
+    }
+    
+    function closeDialog() {
+      document.getElementById('atm-dialog').classList.add('hidden');
+      if (isLoggedIn) {
+        resetTimeoutTimer();
+      }
+    }
+    
+    // 金额验证
+    function validateAmount(amount, isDeposit = false) {
+      // 必须是100的倍数
+      if (amount % 100 !== 0) {
+        return { valid: false, message: '金额必须为100的整数倍' };
+      }
+      
+      // 取款验证
+      if (!isDeposit) {
+        if (amount > 20000) {
+          return { valid: false, message: '单笔取款不能超过20,000元' };
+        }
+        if (amount > 50000) {
+          return { valid: false, message: '大额取款(≥50,000元)需提供身份证件' };
+        }
+      }
+      
+      // 存款验证
+      if (isDeposit) {
+        if (amount > 5000) {
+          return { valid: false, message: '单次存款不能超过5,000元' };
+        }
+      }
+      
+      return { valid: true, message: '' };
+    }
+    
+    // 转账验证
+    function validateTransfer(data) {
+      if (!data.recipientName.trim()) {
+        return { valid: false, message: '请输入收款人姓名' };
+      }
+      if (!data.recipientAccount.trim()) {
+        return { valid: false, message: '请输入收款账号' };
+      }
+      if (!data.transferAmount.trim()) {
+        return { valid: false, message: '请输入转账金额' };
+      }
+      if (!data.bankName) {
+        return { valid: false, message: '请选择开户银行' };
+      }
+      
+      const amount = parseFloat(data.transferAmount);
+      if (isNaN(amount) || amount <= 0) {
+        return { valid: false, message: '请输入有效的转账金额' };
+      }
+      if (amount > 50000) {
+        return { valid: false, message: '单笔转账不能超过50,000元' };
+      }
+      
+      return { valid: true, message: '' };
+    }
+    
+    // 取款流程 - 新增：处理取款尝试
+    function handleWithdrawAttempt() {
+      // 增加取款尝试计数
+      withdrawAttemptCount++;
+      
+      // 第一次取款：机器余额不足
+      if (withdrawAttemptCount === 1) {
+        showDialog('取款失败', '机器余额不足，请更换机器进行操作', `
+          <button class="atm-dialog-confirm-btn" onclick="closeDialog(); showPage('home-page')">确定</button>
+        `);
+        return false;
+      }
+      // 第二次及以后：正常进行
+      return true;
+    }
+    
+    // 存款流程 - 新增：处理存款尝试
+    function handleDepositAttempt() {
+      // 增加存款尝试计数
+      depositAttemptCount++;
+      
+      // 第一次存款：发现伪钞
+      if (depositAttemptCount === 1) {
+        showDialog('存款失败', '发现伪钞，请重新操作', `
+          <button class="atm-dialog-confirm-btn" onclick="closeDialog(); depositInputAmount = ''; document.getElementById('deposit-amount').textContent = '0';">确定</button>
+        `);
+        return false;
+      }
+      // 第二次及以后：正常进行
+      return true;
+    }
+    
+    function handleWithdrawAmountInput(input) {
+      if (input === '清除') {
+        withdrawInputAmount = '';
+        document.getElementById('withdraw-custom-amount').textContent = '0';
+      } else if (input === '确认') {
+        const amount = parseInt(withdrawInputAmount || '0');
+        if (withdrawInputAmount === '') {
+          showDialog('输入错误', '请输入取款金额', '<button class="atm-dialog-confirm-btn" onclick="closeDialog()">确定</button>');
+          return;
+        }
+        
+        const validation = validateAmount(amount, false);
+        if (!validation.valid) {
+          showDialog('金额错误', validation.message, '<button class="atm-dialog-confirm-btn" onclick="closeDialog()">确定</button>');
+          withdrawInputAmount = '';
+          document.getElementById('withdraw-custom-amount').textContent = '0';
+          return;
+        }
+        
+        withdrawAmount = amount;
+        showPage('withdraw-step3');
+      } else {
+        withdrawInputAmount += input;
+        document.getElementById('withdraw-custom-amount').textContent = withdrawInputAmount;
+      }
+    }
+    
+    // 取款密码处理
+    function handleWithdrawPasswordInput(input) {
+      const dots = document.querySelectorAll('.password-dot');
+      
+      if (input === '清除') {
+        withdrawPassword = '';
+        dots.forEach(dot => {
+          dot.classList.remove('bg-blue-500');
+          dot.classList.add('bg-gray-300');
+        });
+      } else if (input === '确认') {
+        if (withdrawPassword.length < 6) {
+          showDialog('密码错误', '密码必须为6位数字', '<button class="atm-dialog-confirm-btn" onclick="closeDialog()">确定</button>');
+          return;
+        }
+        
+        // 检查取款尝试次数
+        if (!handleWithdrawAttempt()) {
+          withdrawPassword = ''; // 清空密码
+          dots.forEach(dot => {
+            dot.classList.remove('bg-blue-500');
+            dot.classList.add('bg-gray-300');
+          });
+          return; // 如果返回false，说明显示了特殊提示，直接返回
+        }
+        
+        // 正常流程：显示确认弹窗
+        showDialog('取款确认', `您正在取款 ¥${withdrawAmount} 元，请确认操作`, `
+          <button class="atm-dialog-cancel-btn" onclick="closeDialog()">取消</button>
+          <button class="atm-dialog-confirm-btn" onclick="processWithdraw(${withdrawAmount})">确认</button>
+        `);
+      } else {
+        if (withdrawPassword.length < 6) {
+          withdrawPassword += input;
+          const index = withdrawPassword.length - 1;
+          if (index < dots.length) {
+            dots[index].classList.remove('bg-gray-300');
+            dots[index].classList.add('bg-blue-500');
+          }
+        }
+      }
+    }
+    
+    // 存款流程
+    function handleDepositInput(input) {
+      if (input === '清除') {
+        depositInputAmount = '';
+        document.getElementById('deposit-amount').textContent = '0';
+      } else if (input === '确认') {
+        const amount = parseInt(depositInputAmount || '0');
+        if (depositInputAmount === '') {
+          showDialog('输入错误', '请输入存款金额', '<button class="atm-dialog-confirm-btn" onclick="closeDialog()">确定</button>');
+          return;
+        }
+        
+        const validation = validateAmount(amount, true);
+        if (!validation.valid) {
+          showDialog('金额错误', validation.message, '<button class="atm-dialog-confirm-btn" onclick="closeDialog()">确定</button>');
+          depositInputAmount = '';
+          document.getElementById('deposit-amount').textContent = '0';
+          return;
+        }
+        
+        // 检查存款尝试次数
+        if (!handleDepositAttempt()) {
+          return; // 如果返回false，说明显示了特殊提示，直接返回
+        }
+        
+        // 正常流程：显示确认弹窗
+        showDialog('存款确认', `您正在存款 ¥${amount} 元，请确认操作`, `
+          <button class="atm-dialog-cancel-btn" onclick="closeDialog()">取消</button>
+          <button class="atm-dialog-confirm-btn" onclick="processDeposit(${amount})">确认</button>
+        `);
+      } else {
+        depositInputAmount += input;
+        document.getElementById('deposit-amount').textContent = depositInputAmount;
+      }
+    }
+    
+    function processDeposit(amount) {
+      closeDialog();
+      showDialog('存款成功', `成功存款 ¥${amount} 元，资金已到账`, `
+        <button class="atm-dialog-confirm-btn" onclick="closeDialog(); showPage('home-page')">确定</button>
+      `);
+    }
+    
+    // 转账流程
+    function handleTransferNext() {
+      const recipientName = document.getElementById('recipient-name').value;
+      const recipientAccount = document.getElementById('recipient-account').value;
+      const transferAmount = document.getElementById('transfer-amount').value;
+      const bankSelect = document.getElementById('bank-select');
+      const bankName = bankSelect.options[bankSelect.selectedIndex].text;
+      const bankValue = bankSelect.value;
+      
+      transferData = {
+        recipientName,
+        recipientAccount,
+        transferAmount,
+        bankName,
+        bankValue
+      };
+      
+      const validation = validateTransfer(transferData);
+      if (!validation.valid) {
+        showDialog('输入错误', validation.message, '<button class="atm-dialog-confirm-btn" onclick="closeDialog()">确定</button>');
+        return;
+      }
+      
+      const amount = parseFloat(transferAmount);
+      const fee = bankValue === '' ? 0 : 2.00; // 本行免费，跨行收费
+      const total = amount + fee;
+      
+      // 更新确认页面信息
+      document.getElementById('confirm-recipient-name').textContent = recipientName;
+      document.getElementById('confirm-recipient-account').textContent = recipientAccount;
+      document.getElementById('confirm-bank-name').textContent = bankName;
+      document.getElementById('confirm-transfer-amount').textContent = `¥${amount.toFixed(2)}`;
+      document.getElementById('confirm-total-amount').textContent = `¥${total.toFixed(2)}`;
+      
+      showPage('transfer-step2');
+    }
+    
+    function handleTransferConfirm() {
+      const amount = parseFloat(transferData.transferAmount);
+      const fee = transferData.bankValue === '' ? 0 : 2.00;
+      const total = amount + fee;
+      
+      // 模拟转账处理
+      showDialog('转账处理中', `正在处理向 ${transferData.recipientName} 的转账...`, '');
+      
+      setTimeout(() => {
+        closeDialog();
+        showDialog('转账成功', `成功转账 ¥${amount.toFixed(2)} 元到 ${transferData.recipientName}<br>手续费: ¥${fee.toFixed(2)}<br>总计: ¥${total.toFixed(2)}`, `
+          <button class="atm-dialog-confirm-btn" onclick="closeDialog(); showPage('home-page')">确定</button>
+        `);
+      }, 2000);
+    }
+    
+    // 查询功能
+    function handleQuery() {
+      const timeRange = document.getElementById('time-range').value;
+      const transactionType = document.getElementById('transaction-type').value;
+      const transactionStatus = document.getElementById('transaction-status').value;
+      
+      // 这里可以添加实际的查询逻辑
+      // 目前只是显示所有记录
+      const transactionList = document.getElementById('transaction-list');
+      const transactions = transactionList.querySelectorAll('.grid');
+      
+      transactions.forEach(transaction => {
+        let show = true;
+        
+        // 根据类型筛选
+        if (transactionType !== 'all') {
+          const typeCell = transaction.children[1];
+          const typeText = typeCell.textContent;
+          const typeMap = { withdraw: '取款', deposit: '存款', transfer: '转账' };
+          if (typeText !== typeMap[transactionType]) {
+            show = false;
+          }
+        }
+        
+        // 根据状态筛选
+        if (transactionStatus !== 'all') {
+          const statusCell = transaction.children[4];
+          const statusText = statusCell.textContent;
+          const statusMap = { success: '成功', failed: '失败', pending: '处理中' };
+          if (statusText !== statusMap[transactionStatus]) {
+            show = false;
+          }
+        }
+        
+        if (show) {
+          transaction.classList.remove('hidden');
+        } else {
+          transaction.classList.add('hidden');
+        }
+      });
+      
+      // 显示查询结果提示
+      const visibleCount = transactionList.querySelectorAll('.grid:not(.hidden)').length;
+      if (visibleCount === 0) {
+        showDialog('查询结果', '没有找到符合条件的交易记录', `
+          <button class="atm-dialog-confirm-btn" onclick="closeDialog()">确定</button>
+        `);
+      }
+    }
+    
+    // 显示取款动画
+    function showCashAnimation(amount) {
+      closeDialog();
+      const animation = document.getElementById('cash-animation');
+      animation.classList.remove('hidden');
+      
+      // 更新金额显示
+      const cashNote = animation.querySelector('.cash-note .bg-yellow-400');
+      if (cashNote) {
+        cashNote.textContent = `¥${amount}`;
+      }
+      
+      let cashTimer = 30;
+      document.getElementById('cash-timer').textContent = cashTimer;
+      
+      const cashInterval = setInterval(() => {
+        cashTimer--;
+        document.getElementById('cash-timer').textContent = cashTimer;
+        
+        if (cashTimer <= 0) {
+          clearInterval(cashInterval);
+          animation.classList.add('hidden');
+          showDialog('操作超时', '30秒内未取走现金，已自动回收', `
+            <button class="atm-dialog-confirm-btn" onclick="closeDialog(); showPage('home-page')">确定</button>
+          `);
+        }
+      }, 1000);
+      
+      // 添加手动关闭功能
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'absolute top-4 right-4 text-white text-2xl';
+      closeBtn.innerHTML = '<iconify-icon icon="mdi:close"></iconify-icon>';
+      closeBtn.onclick = function() {
+        clearInterval(cashInterval);
+        animation.classList.add('hidden');
+        showPage('home-page');
+      };
+      animation.querySelector('.text-center').appendChild(closeBtn);
+    }
+    
+    function processWithdraw(amount) {
+      closeDialog();
+      showCashAnimation(amount);
+    }
+    
+    // 按钮事件处理
+    document.addEventListener('DOMContentLoaded', () => {
+      // 登录按钮
+      document.getElementById('login-btn').addEventListener('click', function() {
+        const cardNumber = document.getElementById('card-number').value;
+        const password = document.getElementById('password').value;
+        
+        if (cardNumber && password) {
+          isLoggedIn = true;
+          // 重置计数器（用户重新登录时）
+          withdrawAttemptCount = 0;
+          depositAttemptCount = 0;
+          showPage('home-page');
+          resetTimeoutTimer();
+        } else {
+          showDialog('登录失败', '请输入银行卡号和密码', '<button class="atm-dialog-confirm-btn" onclick="closeDialog()">确定</button>');
+        }
+      });
+      
+      // 首页按钮
+      document.querySelectorAll('.atm-primary-btn[data-next]').forEach(button => {
+        button.addEventListener('click', function() {
+          const nextPage = this.getAttribute('data-next');
+          if (nextPage) showPage(nextPage);
+        });
+      });
+      
+      // 返回按钮
+      document.querySelectorAll('.atm-back-btn').forEach(button => {
+        button.addEventListener('click', function() {
+          const backTarget = this.getAttribute('data-back');
+          if (backTarget === 'home') {
+            showPage('home-page');
+          } else if (backTarget === 'withdraw-step1') {
+            showPage('withdraw-step1');
+          } else if (backTarget === 'withdraw-step2') {
+            showPage('withdraw-step2');
+          } else if (backTarget === 'transfer-step1') {
+            showPage('transfer-step1');
+          }
+        });
+      });
+      
+      // 取款金额按钮
+      document.querySelectorAll('.withdraw-amount-btn').forEach(button => {
+        button.addEventListener('click', function() {
+          const amount = this.getAttribute('data-amount');
+          withdrawAmount = parseInt(amount);
+          
+          // 检查取款尝试次数
+          if (!handleWithdrawAttempt()) {
+            return; // 如果返回false，说明显示了特殊提示，直接返回
+          }
+          
+          // 正常流程：显示确认弹窗
+          showDialog('取款确认', `您正在取款 ${amount} 元，请确认操作`, `
+            <button class="atm-dialog-cancel-btn" onclick="closeDialog()">取消</button>
+            <button class="atm-dialog-confirm-btn" onclick="processWithdraw(${amount})">确认</button>
+          `);
+        });
+      });
+      
+      // 取款其他金额按钮
+      document.querySelector('.atm-secondary-btn[data-next="withdraw-step2"]')?.addEventListener('click', function() {
+        showPage('withdraw-step2');
+      });
+      
+      // 取款数字键盘按钮
+      document.querySelectorAll('.withdraw-numpad-btn').forEach(button => {
+        button.addEventListener('click', function() {
+          handleWithdrawAmountInput(this.textContent);
+        });
+      });
+      
+      // 取款清除按钮
+      document.querySelectorAll('.withdraw-clear-btn').forEach(button => {
+        button.addEventListener('click', function() {
+          handleWithdrawAmountInput('清除');
+        });
+      });
+      
+      // 取款确认按钮
+      document.querySelectorAll('.withdraw-custom-confirm-btn').forEach(button => {
+        button.addEventListener('click', function() {
+          handleWithdrawAmountInput('确认');
+        });
+      });
+      
+      // 取款密码按钮
+      document.querySelectorAll('.withdraw-password-btn').forEach(button => {
+        button.addEventListener('click', function() {
+          handleWithdrawPasswordInput(this.textContent);
+        });
+      });
+      
+      document.querySelector('.withdraw-password-clear')?.addEventListener('click', function() {
+        handleWithdrawPasswordInput('清除');
+      });
+      
+      document.querySelector('.withdraw-password-confirm')?.addEventListener('click', function() {
+        handleWithdrawPasswordInput('确认');
+      });
+      
+      // 存款数字键盘按钮
+      document.querySelectorAll('.deposit-numpad-btn').forEach(button => {
+        button.addEventListener('click', function() {
+          handleDepositInput(this.textContent);
+        });
+      });
+      
+      document.querySelector('.deposit-clear-btn')?.addEventListener('click', function() {
+        handleDepositInput('清除');
+      });
+      
+      document.querySelector('.deposit-confirm-btn')?.addEventListener('click', function() {
+        handleDepositInput('确认');
+      });
+      
+      // 存款继续按钮
+      document.getElementById('deposit-proceed-btn')?.addEventListener('click', function() {
+        const amount = parseInt(depositInputAmount || '0');
+        if (depositInputAmount === '') {
+          showDialog('输入错误', '请输入存款金额', '<button class="atm-dialog-confirm-btn" onclick="closeDialog()">确定</button>');
+          return;
+        }
+        
+        const validation = validateAmount(amount, true);
+        if (!validation.valid) {
+          showDialog('金额错误', validation.message, '<button class="atm-dialog-confirm-btn" onclick="closeDialog()">确定</button>');
+          return;
+        }
+        
+        handleDepositInput('确认');
+      });
+      
+      // 转账下一步按钮
+      document.getElementById('transfer-next-btn')?.addEventListener('click', handleTransferNext);
+      
+      // 转账确认按钮
+      document.getElementById('transfer-confirm-btn')?.addEventListener('click', handleTransferConfirm);
+      
+      // 查询按钮
+      document.getElementById('query-btn')?.addEventListener('click', handleQuery);
+      
+      // 初始显示登录页面
+      showPage('login-page');
+    });
+  </script>
+</body>
+</html>
